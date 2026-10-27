@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   verification-gates:
-    if: (!hashFiles('.github/workflows/init.yml') || github.repository == 'tanzhongyan-org/template-rust')
     runs-on: ubuntu-latest
     services:
       postgres:
