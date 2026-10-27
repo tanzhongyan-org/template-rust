@@ -1,0 +1,15 @@
+id: no-empty-rust-stubs
+valid:
+  - |
+    fn real_work() -> i32 {
+        42
+    }
+  - |
+    pub fn greet(name: &str) -> String {
+        format!("Hello, {}", name)
+    }
+invalid:
+  - |
+    fn stub() {}
+  - |
+    fn compute() -> i32 {}

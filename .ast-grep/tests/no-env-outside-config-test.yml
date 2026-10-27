@@ -1,0 +1,7 @@
+id: no-env-outside-config
+valid:
+  - "let cfg = Config::from_env()?;"
+  - "let port = config.server.port;"
+invalid:
+  - "let secret = std::env::var(\"SECRET_KEY\");"
+  - "let port = env::var(\"PORT\");"

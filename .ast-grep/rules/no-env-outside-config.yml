@@ -1,0 +1,11 @@
+id: no-env-outside-config
+message: "Direct access to std::env::var is forbidden outside config module."
+severity: error
+language: Rust
+ignores:
+  - "src/core/config.rs"
+  - "src/config.rs"
+rule:
+  any:
+    - pattern: std::env::var($$$)
+    - pattern: env::var($$$)
