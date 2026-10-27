@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use crate::core::config::AppConfig;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct AppState {

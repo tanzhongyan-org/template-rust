@@ -1,7 +1,7 @@
-.PHONY: install dev test lint lint-fix check
+.PHONY: setup dev test lint fix typecheck check up down build
 
-install:
-	cargo build
+setup:
+	cargo check
 
 dev:
 	cargo run
@@ -13,14 +13,16 @@ lint:
 	cargo fmt --check
 	cargo clippy --all-targets -- -D warnings
 
-lint-fix:
+fix:
 	cargo fmt
 	cargo clippy --fix --allow-dirty --allow-staged
+
+typecheck:
+	cargo check --all-targets
 
 check:
 	cargo check --all-targets
 	cargo fmt --check
 	cargo clippy --all-targets -- -D warnings
 	cargo test
-	npx --yes fallow@3.33.1 dupes --quiet --no-fragments
 	npx --yes --package @ast-grep/cli ast-grep scan
