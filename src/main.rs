@@ -17,8 +17,11 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let pool = sqlx::PgPool::connect(&config.database_url).await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
+
     let addr: SocketAddr = config.server_addr().parse()?;
-    let state = AppState::new(config.clone());
+    let state = AppState::new(config.clone(), pool);
     let app = app_router(state);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 

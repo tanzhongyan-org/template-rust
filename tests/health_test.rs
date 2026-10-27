@@ -11,7 +11,8 @@ use tower::ServiceExt;
 #[tokio::test]
 async fn test_health_check_endpoint() {
     let config = AppConfig::default();
-    let state = AppState::new(config);
+    let pool = sqlx::PgPool::connect_lazy(&config.database_url).unwrap();
+    let state = AppState::new(config, pool);
     let app = app_router(state);
 
     let response = app

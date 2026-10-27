@@ -11,3 +11,21 @@ services:
       - APP_NAME=template-rust
       - APP_ENV=local
       - LOG_LEVEL=debug
+      - DATABASE_URL=postgres://postgres:password@postgres:5432/template_rust
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: template_rust
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

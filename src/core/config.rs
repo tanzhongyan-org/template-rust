@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub app_name: String,
     pub app_env: String,
     pub log_level: String,
+    pub database_url: String,
 }
 
 impl Default for AppConfig {
@@ -19,6 +20,7 @@ impl Default for AppConfig {
             app_name: "template-rust".to_string(),
             app_env: "development".to_string(),
             log_level: "info".to_string(),
+            database_url: "postgres://postgres:password@localhost:5432/template_rust".to_string(),
         }
     }
 }
@@ -37,6 +39,9 @@ impl AppConfig {
         let log_level = env::var("LOG_LEVEL")
             .or_else(|_| env::var("RUST_LOG"))
             .unwrap_or_else(|_| "info".to_string());
+        let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
+            "postgres://postgres:password@localhost:5432/template_rust".to_string()
+        });
 
         Ok(Self {
             host,
@@ -44,6 +49,7 @@ impl AppConfig {
             app_name,
             app_env,
             log_level,
+            database_url,
         })
     }
 
