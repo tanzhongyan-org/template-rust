@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS notes (
+    id VARCHAR(36) PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_notes_owner_id ON notes (owner_id);

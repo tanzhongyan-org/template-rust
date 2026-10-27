@@ -7,8 +7,9 @@ Do not repeat global workflow rules here.
 - Runtime: Rust 2024 Edition (`rust-toolchain.toml` pinned to 1.90.0)
 - Web Framework: Axum 0.8 with Tokio 1.43+ async runtime
 - Application State: Strongly typed `AppState` shared via `axum::extract::State`
+- Database & Migrations: SQLx 0.8 with embedded migrations and connection pooling
 - Middleware: Tower-HTTP (`TraceLayer`, `CorsLayer`)
-- Serialization & Time: Serde, Serde JSON, Chrono (minimal features)
+- Serialization & Time: Serde, Serde JSON, Chrono (minimal features), UUID v4
 - Observability: Tracing and Tracing-Subscriber (`EnvFilter` + `fmt`)
 - Error Handling: Typed `AppError` via `thiserror` implementing `IntoResponse`
 - Quality Guardrails: Makefile, Lefthook, Ast-Grep, GitHub Actions CI
@@ -19,12 +20,14 @@ Do not repeat global workflow rules here.
 - Configuration: Strongly typed environment loader in `src/core/config.rs` (`AppConfig`)
 - Error Types: Central error enum in `src/core/error.rs` (`AppError`)
 - Transport Handlers: Route handlers in `src/api/<feature>.rs` and router wiring in `src/api/mod.rs`
-- Domain Modules: Feature business logic in `src/domain/<feature>.rs` (create on-demand)
+- Database Migrations: SQL migration scripts in `migrations/`
 - Integration Tests: High-level test suites in `tests/<feature>_test.rs`
 - Unit Tests: Colocated `#[cfg(test)]` modules in domain and handler source files
 
 ## 3. Architecture & Security Invariants
 - Configuration Boundary: Direct access to `std::env::var` in domain and route handlers is banned [enforced by ast-grep]. Load configuration via `AppConfig::from_env()` at bootstrap.
+- Tenant Isolation: Every read and write query on `notes` must filter by `owner_id` [review-only].
+- Identity Boundary: Extract `owner_id` from the `x-user-id` header at the transport boundary [review-only].
 - Error Handling: `unwrap()` and `expect()` are forbidden outside tests [enforced by clippy].
 - Shared Infrastructure: Handlers requiring shared infrastructure or config must use Axum`s `State(state): State<AppState>` extractor [review-only].
 - Graceful Shutdown: Server lifecycle must implement graceful shutdown handling `SIGINT` (Ctrl+C) and `SIGTERM` [review-only].
