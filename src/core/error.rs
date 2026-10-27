@@ -11,22 +11,42 @@ pub enum AppError {
     #[error("Configuration error: {0}")]
     Config(String),
 
+    #[error("Authentication required")]
+    Unauthorized,
+
     #[error("Resource not found: {0}")]
     NotFound(String),
 
     #[error("Bad request: {0}")]
     BadRequest(String),
 
+    #[error("Request body too large")]
+    PayloadTooLarge,
+
     #[error(transparent)]
     Internal(#[from] anyhow::Error),
+}
+
+impl From<sqlx::Error> for AppError {
+    fn from(err: sqlx::Error) -> Self {
+        AppError::Internal(err.into())
+    }
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, message) = match &self {
-            AppError::Config(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg.clone()),
+            AppError::Config(err) => {
+                tracing::error!(error = %err, "Configuration error occurred");
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Internal server error".to_string(),
+                )
+            }
+            AppError::Unauthorized => (StatusCode::UNAUTHORIZED, self.to_string()),
             AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
             AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
+            AppError::PayloadTooLarge => (StatusCode::PAYLOAD_TOO_LARGE, self.to_string()),
             AppError::Internal(err) => {
                 tracing::error!(error = %err, "Internal server error occurred");
                 (

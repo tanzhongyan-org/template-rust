@@ -9,7 +9,10 @@ use template_rust::state::AppState;
 use tower::ServiceExt;
 
 async fn setup_app() -> axum::Router {
-    let config = AppConfig::default();
+    let config = AppConfig {
+        trust_identity_header: true,
+        ..AppConfig::default()
+    };
     let pool = sqlx::PgPool::connect(&config.database_url)
         .await
         .expect("Failed to connect to database");

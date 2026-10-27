@@ -1,6 +1,8 @@
-use std::env;
+use axum::http::HeaderValue;
 
 use crate::core::error::AppError;
+
+const DEFAULT_DATABASE_URL: &str = "postgres://postgres:password@localhost:5432/template_rust";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppConfig {
@@ -10,6 +12,11 @@ pub struct AppConfig {
     pub app_env: String,
     pub log_level: String,
     pub database_url: String,
+    /// Honour the `x-user-id` header as the caller identity. Off unless
+    /// `TRUST_IDENTITY_HEADER=true`.
+    pub trust_identity_header: bool,
+    /// Browser origins allowed by CORS. Empty means CORS is disabled.
+    pub cors_allowed_origins: Vec<String>,
 }
 
 impl Default for AppConfig {
@@ -20,36 +27,48 @@ impl Default for AppConfig {
             app_name: "template-rust".to_string(),
             app_env: "development".to_string(),
             log_level: "info".to_string(),
-            database_url: "postgres://postgres:password@localhost:5432/template_rust".to_string(),
+            database_url: DEFAULT_DATABASE_URL.to_string(),
+            trust_identity_header: false,
+            cors_allowed_origins: Vec::new(),
         }
     }
 }
 
 impl AppConfig {
     pub fn from_env() -> Result<Self, AppError> {
-        let host = env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
-        let port = match env::var("PORT") {
-            Ok(val) => val
+        Self::from_lookup(|key| std::env::var(key).ok())
+    }
+
+    /// Builds the configuration from any key lookup, so tests need no process environment.
+    pub fn from_lookup(get: impl Fn(&str) -> Option<String>) -> Result<Self, AppError> {
+        let defaults = Self::default();
+        let port = match get("PORT") {
+            Some(val) => val
                 .parse::<u16>()
                 .map_err(|_| AppError::Config(format!("Invalid PORT value: {val}")))?,
-            Err(_) => 8000,
+            None => defaults.port,
         };
-        let app_name = env::var("APP_NAME").unwrap_or_else(|_| "template-rust".to_string());
-        let app_env = env::var("APP_ENV").unwrap_or_else(|_| "development".to_string());
-        let log_level = env::var("LOG_LEVEL")
-            .or_else(|_| env::var("RUST_LOG"))
-            .unwrap_or_else(|_| "info".to_string());
-        let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
-            "postgres://postgres:password@localhost:5432/template_rust".to_string()
-        });
+        let trust_identity_header = match get("TRUST_IDENTITY_HEADER").as_deref() {
+            None | Some("false") => false,
+            Some("true") => true,
+            Some(other) => {
+                return Err(AppError::Config(format!(
+                    "Invalid TRUST_IDENTITY_HEADER value: {other} (use true or false)"
+                )));
+            }
+        };
 
         Ok(Self {
-            host,
+            host: get("HOST").unwrap_or(defaults.host),
             port,
-            app_name,
-            app_env,
-            log_level,
-            database_url,
+            app_name: get("APP_NAME").unwrap_or(defaults.app_name),
+            app_env: get("APP_ENV").unwrap_or(defaults.app_env),
+            log_level: get("LOG_LEVEL")
+                .or_else(|| get("RUST_LOG"))
+                .unwrap_or(defaults.log_level),
+            database_url: get("DATABASE_URL").unwrap_or(defaults.database_url),
+            trust_identity_header,
+            cors_allowed_origins: parse_origins(get("CORS_ALLOWED_ORIGINS").as_deref())?,
         })
     }
 
@@ -58,28 +77,66 @@ impl AppConfig {
     }
 }
 
-pub type Config = AppConfig;
+fn parse_origins(raw: Option<&str>) -> Result<Vec<String>, AppError> {
+    let mut origins = Vec::new();
+    for origin in raw.unwrap_or("").split(',').map(str::trim) {
+        if origin.is_empty() {
+            continue;
+        }
+        if origin == "*" || HeaderValue::from_str(origin).is_err() {
+            return Err(AppError::Config(format!(
+                "Invalid CORS_ALLOWED_ORIGINS entry: {origin} (list full origins such as https://app.example.com)"
+            )));
+        }
+        origins.push(origin.to_string());
+    }
+    Ok(origins)
+}
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::expect_used)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+
+    fn load(pairs: &[(&str, &str)]) -> Result<AppConfig, AppError> {
+        let map: HashMap<String, String> = pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_string(), (*v).to_string()))
+            .collect();
+        AppConfig::from_lookup(|key| map.get(key).cloned())
+    }
 
     #[test]
-    fn test_app_config_default() {
-        let config = AppConfig::default();
-        assert_eq!(config.host, "0.0.0.0");
-        assert_eq!(config.port, 8000);
-        assert_eq!(config.app_name, "template-rust");
-        assert_eq!(config.app_env, "development");
-        assert_eq!(config.log_level, "info");
+    fn defaults_are_fail_closed() {
+        let config = load(&[]).unwrap();
+        assert_eq!(config, AppConfig::default());
+        assert!(!config.trust_identity_header);
+        assert!(config.cors_allowed_origins.is_empty());
         assert_eq!(config.server_addr(), "0.0.0.0:8000");
     }
 
     #[test]
-    fn test_app_config_from_env_defaults() {
-        let config = AppConfig::from_env().expect("Config should load with defaults");
-        assert_eq!(config.host, "0.0.0.0");
-        assert_eq!(config.port, 8000);
+    fn reads_identity_and_cors_settings() {
+        let config = load(&[
+            ("TRUST_IDENTITY_HEADER", "true"),
+            (
+                "CORS_ALLOWED_ORIGINS",
+                "https://a.example.com, https://b.example.com",
+            ),
+        ])
+        .unwrap();
+        assert!(config.trust_identity_header);
+        assert_eq!(
+            config.cors_allowed_origins,
+            ["https://a.example.com", "https://b.example.com"]
+        );
+    }
+
+    #[test]
+    fn rejects_bad_values() {
+        assert!(load(&[("PORT", "abc")]).is_err());
+        assert!(load(&[("TRUST_IDENTITY_HEADER", "yes")]).is_err());
+        assert!(load(&[("CORS_ALLOWED_ORIGINS", "*")]).is_err());
     }
 }

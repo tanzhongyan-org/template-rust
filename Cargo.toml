@@ -2,12 +2,14 @@
 name = "template-rust"
 version = "0.1.0"
 edition = "2024"
-description = "Universal Rust runtime template with agentic quality guardrails and verification gates."
+description = "Rust web service template: Axum, SQLx, fail-closed identity, and machine-checked quality gates."
+license = "MIT"
+publish = false
 
 [dependencies]
-tokio = { version = "1.43", features = ["macros", "rt-multi-thread", "net", "signal"] }
+tokio = { version = "1.54", features = ["macros", "rt-multi-thread", "net", "signal"] }
 axum = { version = "0.8" }
-tower-http = { version = "0.6", features = ["trace", "cors"] }
+tower-http = { version = "0.7", features = ["trace", "cors", "timeout"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", default-features = false, features = ["serde", "clock", "std"] }
@@ -15,7 +17,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 thiserror = "2"
 anyhow = "1"
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "macros", "chrono", "uuid", "migrate"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "macros", "chrono", "uuid", "migrate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dev-dependencies]
