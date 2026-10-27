@@ -1,44 +1,41 @@
 # Rust Web Service Agent Guidelines (L1 Extension)
 
 Inherits: Universal L0 Invariants (workflow/AGENTS.md).
-Do not repeat global workflow rules here.
+Do not repeat global workflow rules here. Architecture, code map and invariants live in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 1. Project Technology Stack
-- Runtime: Rust 2024 Edition (`rust-toolchain.toml` pinned to 1.90.0)
-- Web Framework: Axum 0.8 with Tokio 1.43+ async runtime
-- Application State: Strongly typed `AppState` shared via `axum::extract::State`
-- Database & Migrations: SQLx 0.8 with embedded migrations and connection pooling
-- Middleware: Tower-HTTP (`TraceLayer`, `CorsLayer`)
-- Serialization & Time: Serde, Serde JSON, Chrono (minimal features), UUID v4
-- Observability: Tracing and Tracing-Subscriber (`EnvFilter` + `fmt`)
-- Error Handling: Typed `AppError` via `thiserror` implementing `IntoResponse`
-- Quality Guardrails: Makefile, Lefthook, Ast-Grep, GitHub Actions CI
 
-## 2. Physical File Placement Rules
-- Entry Point: Binary server bootstrap and Tokio runtime in `src/main.rs`
-- Application State: Central state container in `src/state.rs` (`AppState`)
-- Configuration: Strongly typed environment loader in `src/core/config.rs` (`AppConfig`)
-- Error Types: Central error enum in `src/core/error.rs` (`AppError`)
-- Transport Handlers: Route handlers in `src/api/<feature>.rs` and router wiring in `src/api/mod.rs`
-- Database Migrations: SQL migration scripts in `migrations/`
-- Integration Tests: High-level test suites in `tests/<feature>_test.rs`
-- Unit Tests: Colocated `#[cfg(test)]` modules in domain and handler source files
+- Runtime: Rust 2024 Edition; the toolchain version is pinned in `rust-toolchain.toml`
+- Web: Axum on Tokio; middleware from Tower-HTTP
+- Database: SQLx (Postgres) with embedded migrations
+- Errors: typed `AppError` implementing `IntoResponse`
+- Quality: Makefile, Lefthook, ast-grep, cargo-deny, GitHub Actions
 
-## 3. Architecture & Security Invariants
-- Configuration Boundary: Direct access to `std::env::var` in domain and route handlers is banned [enforced by ast-grep]. Load configuration via `AppConfig::from_env()` at bootstrap.
-- Tenant Isolation: Every read and write query on `notes` must filter by `owner_id` [review-only].
-- Identity Boundary: Extract `owner_id` from the `x-user-id` header at the transport boundary [review-only].
-- Error Handling: `unwrap()` and `expect()` are forbidden outside tests [enforced by clippy].
-- Shared Infrastructure: Handlers requiring shared infrastructure or config must use Axum`s `State(state): State<AppState>` extractor [review-only].
-- Graceful Shutdown: Server lifecycle must implement graceful shutdown handling `SIGINT` (Ctrl+C) and `SIGTERM` [review-only].
-- Typed Error Responses: Route handlers must return typed responses or `Result<_, AppError>` [enforced by compiler].
-- Error Masking: `AppError::into_response` must never leak raw internal errors (`AppError::Internal`) to HTTP clients [review-only].
+## 2. Where things go
+
+- Find an existing helper in the Code map in [ARCHITECTURE.md](ARCHITECTURE.md) before you write one.
+- Handlers live in `src/api/<feature>.rs`; routes are registered in `src/api/mod.rs`.
+- Environment variables are read only in `src/core/config.rs`.
+- Integration tests live in `tests/<feature>_test.rs`; unit tests sit in `#[cfg(test)]` modules.
+- A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `repo-policy.json` in the same PR.
+- A new dependency needs a row in `docs/dependencies.md`.
+
+## 3. Security invariants
+
+- Callers are identified only through the `OwnerId` extractor; never read `x-user-id` directly [enforced by `tests/security_test.rs`].
+- Every query on `notes` filters by `owner_id` [enforced by `tests/notes_test.rs`].
+- `unwrap()` and `expect()` are forbidden outside tests [enforced by clippy].
+- `AppError::Internal` never reaches a client [review-only].
 
 ## 4. Verification Gates
-Run `make check` to verify task completion:
-1. Gate 1 (Compile & Typecheck): `cargo check --all-targets`
-2. Gate 2 (Format & Clippy): `cargo fmt --check && cargo clippy --all-targets -- -D warnings`
+
+Run `make verify` after edits and `make check` before you finish:
+
+1. Gate 1 (Typecheck): `cargo check --all-targets`
+2. Gate 2 (Lint & Format): `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo deny check bans licenses sources`, markdownlint
 3. Gate 3 (Tests): `cargo test`
-4. Gate 4 (Dead Code): Compiler `dead_code` analysis under `-D warnings` and `cargo-machete`
-5. Gate 5 (Duplication): N/A (TypeScript/Web specific)
-6. Gate 6 (Anti-Slop): `npx --yes --package @ast-grep/cli@0.51.0 ast-grep scan && ast-grep test`
+4. Gate 4 (Dead Code): `cargo machete`
+5. Gate 5 (Duplication): `jscpd` with `.jscpd.json`
+6. Gate 6 (Anti-Slop): ast-grep scan and rule tests
+
+`make policy` (layout, docs, dependency ledger, version drift) runs inside both targets.

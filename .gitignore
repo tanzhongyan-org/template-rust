@@ -10,7 +10,12 @@
 # Environments & secrets
 .env
 .env.local
+.env.*
+!.env.example
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Tool caches
+node_modules/

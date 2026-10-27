@@ -1,0 +1,10 @@
+{
+  "path": ["src"],
+  "format": ["rust"],
+  "minTokens": 50,
+  "threshold": 0,
+  "gitignore": true,
+  "ignore": ["**/tests/**", "**/migrations/**", "**/target/**"],
+  "reporters": ["console"],
+  "silent": true
+}

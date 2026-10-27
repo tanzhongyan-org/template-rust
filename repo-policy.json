@@ -1,0 +1,55 @@
+{
+  "layout": {
+    "allow": [
+      ".agents",
+      ".ast-grep",
+      ".ast-grep/**",
+      ".claude",
+      ".gemini",
+      ".github",
+      ".github/**",
+      "docs",
+      "docs/**",
+      "migrations",
+      "scripts",
+      "src",
+      "src/api",
+      "src/core",
+      "tests"
+    ]
+  },
+  "docs": {
+    "exclude": ["docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**"],
+    "externalPrefixes": ["workflow/", "shared/"],
+    "ignorePaths": ["target", "target/**"],
+    "envExample": ".env.example",
+    "envDocumentedIn": "README.md"
+  },
+  "dependencies": {
+    "ledger": "docs/dependencies.md",
+    "manifests": ["Cargo.toml"]
+  },
+  "versions": [
+    {
+      "name": "postgres",
+      "sources": [
+        { "file": "compose.yaml", "pattern": "image:\\s*postgres:(\\S+)" },
+        { "file": ".github/workflows/ci.yml", "pattern": "image:\\s*postgres:(\\S+)" }
+      ]
+    },
+    {
+      "name": "cargo-deny",
+      "sources": [
+        { "file": "Makefile", "pattern": "^CARGO_DENY_VERSION\\s*:=\\s*(\\S+)" },
+        { "file": ".github/workflows/ci.yml", "pattern": "CARGO_DENY_VERSION:\\s*\"([^\"]+)\"" }
+      ]
+    },
+    {
+      "name": "cargo-machete",
+      "sources": [
+        { "file": "Makefile", "pattern": "^CARGO_MACHETE_VERSION\\s*:=\\s*(\\S+)" },
+        { "file": ".github/workflows/ci.yml", "pattern": "CARGO_MACHETE_VERSION:\\s*\"([^\"]+)\"" }
+      ]
+    }
+  ]
+}

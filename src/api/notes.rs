@@ -1,14 +1,25 @@
 use axum::{
     Json,
     extract::{Path, State},
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
     response::IntoResponse,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{core::error::AppError, state::AppState};
+use crate::{
+    api::extract::{ApiJson, OwnerId},
+    core::error::AppError,
+    state::AppState,
+};
+
+/// Column list shared by every query so `Note` and the SQL cannot drift apart.
+macro_rules! note_columns {
+    () => {
+        "id, owner_id, title, body, created_at, updated_at"
+    };
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Note {
@@ -32,12 +43,8 @@ pub struct UpdateNoteRequest {
     pub body: Option<String>,
 }
 
-fn extract_owner_id(headers: &HeaderMap) -> String {
-    headers
-        .get("x-user-id")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.to_string())
-        .unwrap_or_else(|| "test-owner".to_string())
+fn note_not_found() -> AppError {
+    AppError::NotFound("Note not found".to_string())
 }
 
 fn validate_title(title: &str) -> Result<(), AppError> {
@@ -62,12 +69,13 @@ fn validate_body(body: &str) -> Result<(), AppError> {
 
 pub async fn list_notes(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    OwnerId(owner_id): OwnerId,
 ) -> Result<Json<Vec<Note>>, AppError> {
-    let owner_id = extract_owner_id(&headers);
-    let notes = sqlx::query_as::<_, Note>(
-        "SELECT id, owner_id, title, body, created_at, updated_at FROM notes WHERE owner_id = $1 ORDER BY created_at DESC",
-    )
+    let notes = sqlx::query_as::<_, Note>(concat!(
+        "SELECT ",
+        note_columns!(),
+        " FROM notes WHERE owner_id = $1 ORDER BY created_at DESC"
+    ))
     .bind(owner_id)
     .fetch_all(&state.db)
     .await
@@ -78,36 +86,38 @@ pub async fn list_notes(
 
 pub async fn get_note(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    OwnerId(owner_id): OwnerId,
     Path(id): Path<String>,
 ) -> Result<Json<Note>, AppError> {
-    let owner_id = extract_owner_id(&headers);
-    let note = sqlx::query_as::<_, Note>(
-        "SELECT id, owner_id, title, body, created_at, updated_at FROM notes WHERE id = $1 AND owner_id = $2",
-    )
+    let note = sqlx::query_as::<_, Note>(concat!(
+        "SELECT ",
+        note_columns!(),
+        " FROM notes WHERE id = $1 AND owner_id = $2"
+    ))
     .bind(id)
     .bind(owner_id)
     .fetch_optional(&state.db)
-    .await
-    .map_err(|e| AppError::Internal(e.into()))?
-    .ok_or_else(|| AppError::NotFound("Note not found".to_string()))?;
+    .await?
+    .ok_or_else(note_not_found)?;
 
     Ok(Json(note))
 }
 
 pub async fn create_note(
     State(state): State<AppState>,
-    headers: HeaderMap,
-    Json(payload): Json<CreateNoteRequest>,
+    OwnerId(owner_id): OwnerId,
+    ApiJson(payload): ApiJson<CreateNoteRequest>,
 ) -> Result<(StatusCode, Json<Note>), AppError> {
-    let owner_id = extract_owner_id(&headers);
     validate_title(&payload.title)?;
     validate_body(&payload.body)?;
 
     let id = Uuid::new_v4().to_string();
-    let note = sqlx::query_as::<_, Note>(
-        "INSERT INTO notes (id, owner_id, title, body, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING id, owner_id, title, body, created_at, updated_at",
-    )
+    let note = sqlx::query_as::<_, Note>(concat!(
+        "INSERT INTO notes (",
+        note_columns!(),
+        ") VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING ",
+        note_columns!()
+    ))
     .bind(id)
     .bind(owner_id)
     .bind(payload.title.trim())
@@ -121,12 +131,10 @@ pub async fn create_note(
 
 pub async fn update_note(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    OwnerId(owner_id): OwnerId,
     Path(id): Path<String>,
-    Json(payload): Json<UpdateNoteRequest>,
+    ApiJson(payload): ApiJson<UpdateNoteRequest>,
 ) -> Result<Json<Note>, AppError> {
-    let owner_id = extract_owner_id(&headers);
-
     if let Some(ref title) = payload.title {
         validate_title(title)?;
     }
@@ -135,7 +143,7 @@ pub async fn update_note(
     }
 
     let note = sqlx::query_as::<_, Note>(
-        "UPDATE notes SET title = COALESCE($1, title), body = COALESCE($2, body), updated_at = NOW() WHERE id = $3 AND owner_id = $4 RETURNING id, owner_id, title, body, created_at, updated_at",
+        concat!("UPDATE notes SET title = COALESCE($1, title), body = COALESCE($2, body), updated_at = NOW() WHERE id = $3 AND owner_id = $4 RETURNING ", note_columns!()),
     )
     .bind(payload.title.as_deref().map(|s| s.trim()))
     .bind(payload.body.as_deref().map(|s| s.trim()))
@@ -143,27 +151,25 @@ pub async fn update_note(
     .bind(owner_id)
     .fetch_optional(&state.db)
     .await
-    .map_err(|e| AppError::Internal(e.into()))?
-    .ok_or_else(|| AppError::NotFound("Note not found".to_string()))?;
+    ?
+    .ok_or_else(note_not_found)?;
 
     Ok(Json(note))
 }
 
 pub async fn delete_note(
     State(state): State<AppState>,
-    headers: HeaderMap,
+    OwnerId(owner_id): OwnerId,
     Path(id): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
-    let owner_id = extract_owner_id(&headers);
     let result = sqlx::query("DELETE FROM notes WHERE id = $1 AND owner_id = $2")
         .bind(id)
         .bind(owner_id)
         .execute(&state.db)
-        .await
-        .map_err(|e| AppError::Internal(e.into()))?;
+        .await?;
 
     if result.rows_affected() == 0 {
-        return Err(AppError::NotFound("Note not found".to_string()));
+        return Err(note_not_found());
     }
 
     Ok(StatusCode::NO_CONTENT)
