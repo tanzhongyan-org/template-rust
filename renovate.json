@@ -1,7 +1,31 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "helpers:pinGitHubActionDigests"
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "minimumReleaseAge": "3 days",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Group non-major updates into one PR",
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "groupName": "non-major"
+    },
+    {
+      "description": "Keep the Postgres image tag in step across compose.yaml and CI",
+      "matchDepNames": ["postgres"],
+      "groupName": "postgres"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions annotated with a renovate comment in Makefile and workflows",
+      "managerFilePatterns": ["/(^|/)Makefile$/", "/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n\\s*[A-Za-z0-9_]+\\s*(?::=|:|=)\\s*\"?(?<currentValue>[^\\s\"]+)\"?"
+      ]
+    }
   ]
 }
