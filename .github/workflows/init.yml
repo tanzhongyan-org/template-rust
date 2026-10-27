@@ -20,17 +20,19 @@ jobs:
           echo "Renaming template-rust to $NEW_NAME ($RUST_NAME)..."
           find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.jsonc" -o -name "*.yml" \) \
             -not -path "*/.git/*" \
+            -not -path "*/.github/*" \
             -not -path "*/target/*" \
             -exec sed -i "s/template_rust/$RUST_NAME/g" {} +
           find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.jsonc" -o -name "*.yml" \) \
             -not -path "*/.git/*" \
+            -not -path "*/.github/*" \
             -not -path "*/target/*" \
             -exec sed -i "s/template-rust/$NEW_NAME/g" {} +
 
-      - name: Remove init workflow and commit changes
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git rm .github/workflows/init.yml
-          git commit -m "chore: initialize repository from template-rust"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: initialize repository from template-rust"
           git push
