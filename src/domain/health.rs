@@ -4,17 +4,23 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HealthStatus {
     pub status: String,
-    pub app_name: String,
-    pub environment: String,
     pub timestamp: DateTime<Utc>,
+    pub version: String,
 }
 
-pub fn get_health(app_name: &str, environment: &str) -> HealthStatus {
-    HealthStatus {
-        status: "healthy".to_string(),
-        app_name: app_name.to_string(),
-        environment: environment.to_string(),
-        timestamp: Utc::now(),
+impl HealthStatus {
+    pub fn new() -> Self {
+        Self {
+            status: "ok".to_string(),
+            timestamp: Utc::now(),
+            version: env!("CARGO_PKG_VERSION").to_string(),
+        }
+    }
+}
+
+impl Default for HealthStatus {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -23,13 +29,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_health() {
-        let app = "template-rust";
-        let env = "test";
-        let status = get_health(app, env);
-
-        assert_eq!(status.status, "healthy");
-        assert_eq!(status.app_name, app);
-        assert_eq!(status.environment, env);
+    fn test_health_status() {
+        let status = HealthStatus::new();
+        assert_eq!(status.status, "ok");
+        assert_eq!(status.version, env!("CARGO_PKG_VERSION"));
     }
 }
