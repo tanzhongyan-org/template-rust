@@ -1,9 +1,9 @@
 pub mod health;
 
+use crate::state::AppState;
 use axum::{routing::get, Router};
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
-use crate::state::AppState;
 
 pub fn app_router(state: AppState) -> Router {
     Router::new()

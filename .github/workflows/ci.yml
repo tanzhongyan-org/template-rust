@@ -16,22 +16,8 @@ jobs:
 
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.99.1
           components: clippy, rustfmt
 
-      - name: "Gate 1: Compile & Typecheck"
-        run: cargo check --all-targets
-
-      - name: "Gate 2: Format & Clippy"
-        run: |
-          cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
-
-      - name: "Gate 3: Unit and Integration Tests"
-        run: cargo test
-
-      - name: "Gate 5: Duplication Audit"
-        run: npx --yes fallow@3.33.1 dupes --quiet --no-fragments
-
-      - name: "Gate 6: Anti-Slop Scan"
-        run: npx --yes --package @ast-grep/cli ast-grep scan
+      - name: "Run Verification Gates"
+        run: make check

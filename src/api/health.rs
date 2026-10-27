@@ -1,8 +1,8 @@
+use crate::state::AppState;
 use axum::extract::State;
 use axum::Json;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::state::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct HealthResponse {
