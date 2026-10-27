@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use template_rust::api::app_router;
 use template_rust::core::config::AppConfig;
+use template_rust::state::AppState;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -16,8 +17,9 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let app = app_router();
-    let addr: SocketAddr = format!("{}:{}", config.host, config.port).parse()?;
+    let addr: SocketAddr = config.server_addr().parse()?;
+    let state = AppState::new(config.clone());
+    let app = app_router(state);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 
     info!(
@@ -25,7 +27,35 @@ async fn main() -> anyhow::Result<()> {
         config.app_name, config.app_env, addr
     );
 
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
 
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    tracing::info!("Shutdown signal received, starting graceful drain");
 }
