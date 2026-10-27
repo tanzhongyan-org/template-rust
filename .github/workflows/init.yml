@@ -3,31 +3,43 @@ name: Initialize Template Repository
 on:
   workflow_dispatch:
 
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   init-repo:
+    name: init-repo
     # Only run on repositories created from the template, not on the template itself
     if: github.repository != 'tanzhongyan-org/template-rust'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      # This job pushes the rename commit, so it keeps the checkout credentials.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1  # zizmor: ignore[artipacked]
 
       - name: Rename template placeholders
         run: |
           NEW_NAME="${GITHUB_REPOSITORY#*/}"
           RUST_NAME=$(echo "$NEW_NAME" | tr '-' '_')
           echo "Renaming template-rust to $NEW_NAME ($RUST_NAME)..."
-          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.jsonc" -o -name "*.yml" \) \
+          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.json" -o -name "*.jsonc" -o -name "*.yml" -o -name "*.yaml" -o -name ".env.example" \) \
             -not -path "*/.git/*" \
             -not -path "*/.github/*" \
             -not -path "*/target/*" \
+            -not -name "Cargo.lock" \
             -exec sed -i "s/template_rust/$RUST_NAME/g" {} +
-          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.jsonc" -o -name "*.yml" \) \
+          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.json" -o -name "*.jsonc" -o -name "*.yml" -o -name "*.yaml" -o -name ".env.example" \) \
             -not -path "*/.git/*" \
             -not -path "*/.github/*" \
             -not -path "*/target/*" \
+            -not -name "Cargo.lock" \
             -exec sed -i "s/template-rust/$NEW_NAME/g" {} +
+          sed -i "s/^name = \"template-rust\"$/name = \"$NEW_NAME\"/" Cargo.lock || true
 
       - name: Commit and push changes
         run: |
@@ -36,3 +48,29 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -m "chore: initialize repository from template-rust"
           git push
+
+  template-follow-ups:
+    name: template-follow-ups
+    needs: init-repo
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Open the follow-up issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "Resolve each marker below, then delete it. \`make template-debt\` prints this list."
+            echo
+            echo '```text'
+            make template-debt
+            echo '```'
+          } > body.md
+          gh issue create --title "Template follow-ups" --body-file body.md
