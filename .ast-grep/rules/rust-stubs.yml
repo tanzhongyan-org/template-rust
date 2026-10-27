@@ -1,0 +1,10 @@
+id: no-empty-rust-stubs
+message: "Empty function or placeholder stub detected."
+severity: error
+language: Rust
+rule:
+  any:
+    - pattern: |
+        fn $NAME($$$ARGS) {}
+    - pattern: |
+        fn $NAME($$$ARGS) -> $RET {}
