@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use axum::body::to_bytes;
 use axum::http::{Request, StatusCode};
 use template_rust::api::app_router;

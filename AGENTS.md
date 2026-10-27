@@ -4,7 +4,7 @@ Inherits: Universal L0 Invariants (workflow/AGENTS.md).
 Do not repeat global workflow rules here.
 
 ## 1. Project Technology Stack
-- Runtime: Rust 2024 Edition (`rust-toolchain.toml` pinned to 1.99.1)
+- Runtime: Rust 2024 Edition (`rust-toolchain.toml` pinned to 1.90.0)
 - Web Framework: Axum 0.8 with Tokio 1.43+ async runtime
 - Application State: Strongly typed `AppState` shared via `axum::extract::State`
 - Middleware: Tower-HTTP (`TraceLayer`, `CorsLayer`)
@@ -24,8 +24,9 @@ Do not repeat global workflow rules here.
 - Unit Tests: Colocated `#[cfg(test)]` modules in domain and handler source files
 
 ## 3. Architecture & Security Invariants
-- Configuration Boundary: Direct access to `std::env::var` in domain and route handlers is banned [review-only]. Load configuration via `AppConfig::from_env()` at bootstrap.
-- Shared Infrastructure: Handlers requiring shared infrastructure or config must use Axum's `State(state): State<AppState>` extractor [review-only].
+- Configuration Boundary: Direct access to `std::env::var` in domain and route handlers is banned [enforced by ast-grep]. Load configuration via `AppConfig::from_env()` at bootstrap.
+- Error Handling: `unwrap()` and `expect()` are forbidden outside tests [enforced by clippy].
+- Shared Infrastructure: Handlers requiring shared infrastructure or config must use Axum`s `State(state): State<AppState>` extractor [review-only].
 - Graceful Shutdown: Server lifecycle must implement graceful shutdown handling `SIGINT` (Ctrl+C) and `SIGTERM` [review-only].
 - Typed Error Responses: Route handlers must return typed responses or `Result<_, AppError>` [enforced by compiler].
 - Error Masking: `AppError::into_response` must never leak raw internal errors (`AppError::Internal`) to HTTP clients [review-only].
@@ -35,6 +36,6 @@ Run `make check` to verify task completion:
 1. Gate 1 (Compile & Typecheck): `cargo check --all-targets`
 2. Gate 2 (Format & Clippy): `cargo fmt --check && cargo clippy --all-targets -- -D warnings`
 3. Gate 3 (Tests): `cargo test`
-4. Gate 4 (Dead Code): Compiler `dead_code` analysis under `-D warnings`
+4. Gate 4 (Dead Code): Compiler `dead_code` analysis under `-D warnings` and `cargo-machete`
 5. Gate 5 (Duplication): N/A (TypeScript/Web specific)
-6. Gate 6 (Anti-Slop): `npx --yes --package @ast-grep/cli ast-grep scan`
+6. Gate 6 (Anti-Slop): `npx --yes --package @ast-grep/cli@0.51.0 ast-grep scan && ast-grep test`
