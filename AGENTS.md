@@ -2,6 +2,7 @@
 
 Inherits: Universal L0 Invariants (workflow/AGENTS.md).
 Do not repeat global workflow rules here. Architecture, code map and invariants live in [ARCHITECTURE.md](ARCHITECTURE.md).
+This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and Gemini read it. Do not add CLAUDE.md, GEMINI.md or other per-tool copies: Claude Code ignores this file once a CLAUDE.md exists. `make policy` rejects them.
 
 ## 1. Project Technology Stack
 
@@ -17,7 +18,7 @@ Do not repeat global workflow rules here. Architecture, code map and invariants 
 - Handlers live in `src/api/<feature>.rs`; routes are registered in `src/api/mod.rs`.
 - Environment variables are read only in `src/core/config.rs`.
 - Integration tests live in `tests/<feature>_test.rs`; unit tests sit in `#[cfg(test)]` modules.
-- A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `repo-policy.json` in the same PR.
+- A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `scripts/repo-policy.json` in the same PR.
 - A new dependency needs a row in `docs/dependencies.md`.
 
 ## 3. Security invariants
@@ -35,7 +36,7 @@ Run `make verify` after edits and `make check` before you finish:
 2. Gate 2 (Lint & Format): `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo deny check bans licenses sources`, markdownlint
 3. Gate 3 (Tests): `cargo test`
 4. Gate 4 (Dead Code): `cargo machete`
-5. Gate 5 (Duplication): `jscpd` with `.jscpd.json`
+5. Gate 5 (Duplication): `make duplication` (jscpd, zero clones)
 6. Gate 6 (Anti-Slop): ast-grep scan and rule tests
 
 `make policy` (layout, docs, dependency ledger, version drift) runs inside both targets.

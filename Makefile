@@ -57,7 +57,8 @@ dead-code: ## Gate 4: cargo-machete
 	cargo machete
 
 duplication: ## Gate 5: jscpd
-	npx --yes jscpd@$(JSCPD_VERSION)
+	npx --yes jscpd@$(JSCPD_VERSION) --format rust --min-tokens 50 --threshold 0 \
+		--ignore "**/tests/**,**/migrations/**,**/target/**" --reporters console src
 
 anti-slop: ## Gate 6: ast-grep rules and rule tests
 	$(AST_GREP) scan

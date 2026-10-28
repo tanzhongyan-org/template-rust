@@ -85,4 +85,4 @@ The second returns `[]`.
 | `docs/` | Decisions, dependency ledger and documentation rules. See [docs/README.md](docs/README.md). |
 | `scripts/` | Policy checker and agent hook. |
 
-More: [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [LICENSE](LICENSE).
+More: [CONTRIBUTING.md](.github/CONTRIBUTING.md), [SECURITY.md](.github/SECURITY.md), [LICENSE](LICENSE).
