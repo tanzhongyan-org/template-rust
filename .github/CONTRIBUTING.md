@@ -45,7 +45,7 @@ This walkthrough adds a slice named `<feature>`. Copy the shape of the notes sli
 7. Update `ARCHITECTURE.md` (code map) and `README.md` (if configuration or commands change).
 8. Add a row to `docs/dependencies.md` for each new dependency.
 
-A new directory needs an ADR in `docs/decisions/` and an entry in `layout.allow` in `repo-policy.json`, in the same pull request.
+A new directory needs an ADR in `docs/decisions/` and an entry in `layout.allow` in `scripts/repo-policy.json`, in the same pull request.
 
 ## Commits and pull requests
 
@@ -56,7 +56,7 @@ A new directory needs an ADR in `docs/decisions/` and an entry in `layout.allow`
 
 ## Where docs go
 
-See [docs/README.md](docs/README.md).
+See [docs/README.md](../docs/README.md).
 
 ## Maintainers
 
@@ -76,7 +76,7 @@ gh api repos/OWNER/REPO/rulesets --method POST --input .github/rulesets/main.jso
 
 ### Renovate
 
-Install the Renovate GitHub App on the repository. `renovate.json` groups non-major
+Install the Renovate GitHub App on the repository. `.github/renovate.json` groups non-major
 updates, waits three days after a release and reads `# renovate:` comments in the
 `Makefile` and the workflows.
 

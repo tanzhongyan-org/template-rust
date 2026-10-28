@@ -16,7 +16,7 @@ lines. We never edit an accepted ADR. A later ADR that changes a choice declares
 `Supersedes: NNNN`.
 
 A new top-level directory or a new directory under `src/` needs an ADR and a
-`layout.allow` change in `repo-policy.json` in the same pull request.
+`layout.allow` change in `scripts/repo-policy.json` in the same pull request.
 
 ## Consequences
 

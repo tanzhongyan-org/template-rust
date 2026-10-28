@@ -42,7 +42,7 @@ Find the existing helper here before you write a new one.
 
 - No `std::env::var` outside `src/core/config.rs` [enforced by ast-grep].
 - No `unwrap()` or `expect()` in production code [enforced by clippy].
-- Every directory is listed in `repo-policy.json` [enforced by `make policy`].
+- Every directory is listed in `scripts/repo-policy.json` [enforced by `make policy`].
 - Documented paths, make targets and environment variables exist [enforced by `make policy`].
 - No caller identity means `401`; the header counts only with `TRUST_IDENTITY_HEADER=true` [enforced by `tests/security_test.rs`].
 - CORS allows only configured origins [enforced by `tests/security_test.rs`].

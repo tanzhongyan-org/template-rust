@@ -1,8 +1,8 @@
 # Documentation
 
 This directory holds the documents that explain and record the service. The root
-holds the living documents: `README.md`, `ARCHITECTURE.md`, `CONTRIBUTING.md` and
-`SECURITY.md`.
+holds the living documents: `README.md`, `ARCHITECTURE.md`, `.github/CONTRIBUTING.md` and
+`.github/SECURITY.md`.
 
 | Path | What goes there | Lifespan |
 | --- | --- | --- |
