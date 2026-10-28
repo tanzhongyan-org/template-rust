@@ -2,6 +2,8 @@ name: Initialize Template Repository
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions: {}
 
@@ -16,6 +18,8 @@ jobs:
     if: github.repository != 'tanzhongyan-org/template-rust'
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      renamed: ${{ steps.rename.outputs.renamed }}
     permissions:
       contents: write
     steps:
@@ -23,7 +27,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1  # zizmor: ignore[artipacked]
 
       - name: Rename template placeholders
+        id: rename
         run: |
+          # Runs once: the marker disappears after the first rename.
+          if ! grep -q 'name = "template-rust"' Cargo.toml; then
+            echo "Template already initialized; nothing to do."
+            echo "renamed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           NEW_NAME="${GITHUB_REPOSITORY#*/}"
           RUST_NAME=$(echo "$NEW_NAME" | tr '-' '_')
           echo "Renaming template-rust to $NEW_NAME ($RUST_NAME)..."
@@ -32,26 +43,26 @@ jobs:
             -not -path "./.github/workflows/*" \
             -not -path "*/target/*" \
             -not -name "Cargo.lock" \
-            -exec sed -i "s/template_rust/$RUST_NAME/g" {} +
-          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.json" -o -name "*.jsonc" -o -name "*.yml" -o -name "*.yaml" -o -name ".env.example" \) \
-            -not -path "*/.git/*" \
-            -not -path "./.github/workflows/*" \
-            -not -path "*/target/*" \
-            -not -name "Cargo.lock" \
-            -exec sed -i "s/template-rust/$NEW_NAME/g" {} +
+            -exec sed -i \
+              -e "s|tanzhongyan-org/template-rust|${GITHUB_REPOSITORY}|g" \
+              -e "s|template_rust|${RUST_NAME}|g" \
+              -e "s|template-rust|${NEW_NAME}|g" {} +
           sed -i "s/^name = \"template-rust\"$/name = \"$NEW_NAME\"/" Cargo.lock || true
+          echo "renamed=true" >> "$GITHUB_OUTPUT"
 
       - name: Commit and push changes
+        if: steps.rename.outputs.renamed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --staged --quiet || git commit -m "chore: initialize repository from template-rust"
+          git diff --staged --quiet || git commit -m "chore: initialize repository from template"
           git push
 
   template-follow-ups:
     name: template-follow-ups
     needs: init-repo
+    if: needs.init-repo.outputs.renamed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

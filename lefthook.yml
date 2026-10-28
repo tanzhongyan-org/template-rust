@@ -9,7 +9,7 @@ pre-commit:
     secrets:
       run: >-
         if command -v gitleaks >/dev/null 2>&1; then gitleaks git --staged --redact --no-banner;
-        else echo "gitleaks is not installed; see .github/CONTRIBUTING.md (Prerequisites)" >&2; fi
+        else echo 'gitleaks is not installed, so the secret scan was skipped. See .github/CONTRIBUTING.md (Prerequisites)' >&2; fi
 
     anti-slop:
       run: make anti-slop

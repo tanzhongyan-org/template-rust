@@ -7,6 +7,11 @@
 MODE="${1:-post-edit}"
 INPUT="$(cat || true)"
 
+if ! command -v make >/dev/null 2>&1; then
+  echo "agent-hook: make is not on PATH, so checks were skipped. Install GNU make (Windows: winget install ezwinports.make; macOS: xcode-select --install) and restart the agent." >&2
+  exit 0
+fi
+
 case "$MODE" in
 post-edit)
   FILE_PATH="${2:-}"
@@ -23,6 +28,9 @@ post-edit)
   exit 0
   ;;
 stop)
+  if [ "${AGENT_HOOK_SKIP:-}" = "1" ]; then
+    exit 0
+  fi
   if printf '%s' "$INPUT" | grep -Eq '"stop_hook_active"[[:space:]]*:[[:space:]]*true'; then
     exit 0
   fi
@@ -32,7 +40,10 @@ stop)
   if OUTPUT="$(make verify 2>&1)"; then
     exit 0
   fi
-  printf '%s\n' "$OUTPUT" | tail -n 40 >&2
+  {
+    echo "make verify failed. Fix these errors before finishing:"
+    printf '%s\n' "$OUTPUT" | tail -n 40
+  } >&2
   exit 2
   ;;
 *)

@@ -18,7 +18,7 @@ This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and
 - Handlers live in `src/api/<feature>.rs`; routes are registered in `src/api/mod.rs`.
 - Environment variables are read only in `src/core/config.rs`.
 - Integration tests live in `tests/<feature>_test.rs`; unit tests sit in `#[cfg(test)]` modules.
-- A new top-level or `src/` directory needs an ADR in `docs/decisions/` and a `layout.allow` change in `scripts/repo-policy.json` in the same PR.
+- Nest new code freely inside existing top-level directories. A new top-level directory needs a `layout.allow` entry in `scripts/repo-policy.json`; record the reason in `docs/decisions/` if it changes the architecture.
 - A new dependency needs a row in `docs/dependencies.md`.
 
 ## 3. Security invariants
