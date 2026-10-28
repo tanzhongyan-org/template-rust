@@ -10,7 +10,12 @@ HTTP service and want CI, security scans and agent guardrails from the first com
 
 ## Quick start
 
-You need Rust (via [rustup](https://rustup.rs)), Docker, Node and `make`.
+You need:
+
+- Rust (via [rustup](https://rustup.rs)), Docker and Node.
+- GNU make. On Windows run `winget install ezwinports.make`; on macOS run `xcode-select --install`.
+
+If port 5432 is already taken, set `POSTGRES_PORT` (for example `POSTGRES_PORT=5433 make up`) and point `DATABASE_URL` at the same port.
 
 ```bash
 gh repo create my-service --template tanzhongyan-org/template-rust --private --clone
@@ -44,7 +49,7 @@ The second returns `[]`.
 
 ## After creating your repo
 
-1. Run the **Initialize Template Repository** workflow from the Actions tab. It renames the template placeholders and opens a "Template follow-ups" issue.
+1. The **Initialize Template Repository** workflow runs on your first push to `main`. It renames the template placeholders and opens a "Template follow-ups" issue. If it did not run, start it from the Actions tab.
 2. Run `make template-debt` to list every `TEMPLATE-TODO` marker you must resolve: authentication, code owners, security contact, license holder and the example notes slice.
 
 ## Configuration
@@ -58,6 +63,8 @@ The second returns `[]`.
 | `LOG_LEVEL` | No | `info` | Log filter. `RUST_LOG` takes precedence when set. |
 | `DATABASE_URL` | No | `postgres://postgres:password@localhost:5432/template_rust` | Postgres connection string. |
 | `TRUST_IDENTITY_HEADER` | No | `false` | When `true`, the `x-user-id` header identifies the caller. Otherwise every protected route returns `401`. |
+| `POSTGRES_PORT` | No | `5432` | Host port `compose.yaml` publishes Postgres on. Change it if 5432 is taken. |
+| `AGENT_HOOK_SKIP` | No | unset | Set to `1` to skip the `make verify` agent stop hook. |
 | `CORS_ALLOWED_ORIGINS` | No | empty | Comma-separated origins allowed by CORS. Empty sends no CORS headers. |
 
 ## Commands
