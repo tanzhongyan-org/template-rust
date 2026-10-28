@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "minimumReleaseAge": "3 days",
-  "postUpdateOptions": ["gomodTidy"],
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 5am on monday"],
@@ -29,10 +28,15 @@
     {
       "description": "Update versions annotated with '# renovate: datasource=<ds> depName=<name>' in Makefiles, YAML and TOML",
       "customType": "regex",
-      "managerFilePatterns": ["/(^|/)Makefile$/", "/\.ya?ml$/", "/\.toml$/"],
+      "managerFilePatterns": [
+        "/(^|/)Makefile$/",
+        "/\\.ya?ml$/",
+        "/\\.toml$/"
+      ],
       "matchStrings": [
-        "#\s*renovate:\s*datasource=(?<datasource>\S+)\s+depName=(?<depName>\S+)(?:\s+versioning=(?<versioning>\S+))?(?:\s+extractVersion=(?<extractVersion>\S+))?\s*\n[^\n]*?(?::=|=|:)\s*["']?(?<currentValue>[^\s"']+)["']?"
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n[^\\n]*?(?::=|=|:)\\s*[\"']?(?<currentValue>[^\\s\"']+)[\"']?"
       ]
     }
-  ]
+  ],
+  "postUpdateOptions": ["gomodTidy"]
 }
