@@ -9,9 +9,10 @@ use template_rust::state::AppState;
 use tower::ServiceExt;
 
 async fn setup_app() -> axum::Router {
+    // Read DATABASE_URL so a moved Postgres (POSTGRES_PORT) still works.
     let config = AppConfig {
         trust_identity_header: true,
-        ..AppConfig::default()
+        ..AppConfig::from_env().expect("valid configuration")
     };
     let pool = sqlx::PgPool::connect(&config.database_url)
         .await

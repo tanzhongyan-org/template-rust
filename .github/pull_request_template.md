@@ -21,4 +21,4 @@
 - [ ] Tests cover the new behavior at a public entry point.
 - [ ] Docs change in the same pull request (`README.md`, `ARCHITECTURE.md`, or `docs/`).
 - [ ] No new dependency without a row in `docs/dependencies.md`.
-- [ ] No new directory without an ADR in `docs/decisions/` and a `layout.allow` change in `scripts/repo-policy.json`.
+- [ ] Any new top-level directory is in `layout.allow` in `scripts/repo-policy.json`.
