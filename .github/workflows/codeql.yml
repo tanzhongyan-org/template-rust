@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   codeql:
-    uses: tanzhongyan-org/.github/.github/workflows/codeql.yml@0c54f703d2d0d24b6ec61c8ea0f0d1a7d220f3e9 # v1
+    uses: tanzhongyan-org/.github/.github/workflows/codeql.yml@33bb193f8f32e5b3f715c9e1dff6e36667d8e70d # v1
     with:
       runtime: rust
       language: rust
