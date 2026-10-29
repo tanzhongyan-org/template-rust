@@ -1,0 +1,4 @@
+# Test-only keys under tests/fixtures/ are fake credentials minted for
+# tests/jwt_test.rs. Everything else is scanned without exception.
+[allowlist]
+paths = ['''tests/fixtures/.*\.pem''']

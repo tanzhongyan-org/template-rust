@@ -4,7 +4,7 @@
 use axum::{
     Json,
     extract::{FromRequest, FromRequestParts, Request},
-    http::{StatusCode, request::Parts},
+    http::{StatusCode, header::AUTHORIZATION, request::Parts},
 };
 use serde::de::DeserializeOwned;
 
@@ -12,12 +12,11 @@ use crate::{core::error::AppError, state::AppState};
 
 const IDENTITY_HEADER: &str = "x-user-id";
 
-/// The authenticated caller. Rejects with 401 unless `TRUST_IDENTITY_HEADER=true`
-/// and the `x-user-id` header carries a non-blank value.
+/// The authenticated caller: the subject of a valid product JWT, or the
+/// `x-user-id` header when `TRUST_IDENTITY_HEADER=true`. Anything else is 401.
 #[derive(Debug, Clone)]
 pub struct OwnerId(pub String);
 
-// TEMPLATE-TODO(auth): replace header identity with real authentication
 impl FromRequestParts<AppState> for OwnerId {
     type Rejection = AppError;
 
@@ -25,6 +24,15 @@ impl FromRequestParts<AppState> for OwnerId {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
+        if let Some(token) = bearer_token(parts) {
+            let validator = state.jwt.as_ref().ok_or(AppError::Unauthorized)?;
+            let subject = validator
+                .validate(&token)
+                .await
+                .map_err(|_| AppError::Unauthorized)?;
+            return Ok(OwnerId(subject));
+        }
+        // TEMPLATE-TODO(auth): replace header identity with real authentication
         if !state.config.trust_identity_header {
             return Err(AppError::Unauthorized);
         }
@@ -37,6 +45,20 @@ impl FromRequestParts<AppState> for OwnerId {
             .map(|v| OwnerId(v.to_string()))
             .ok_or(AppError::Unauthorized)
     }
+}
+
+/// Reads the bearer token from the `Authorization` header, if one is present.
+fn bearer_token(parts: &Parts) -> Option<String> {
+    let value = parts.headers.get(AUTHORIZATION)?.to_str().ok()?;
+    let (scheme, token) = value.split_once(' ')?;
+    if !scheme.eq_ignore_ascii_case("bearer") {
+        return None;
+    }
+    let token = token.trim();
+    if token.is_empty() {
+        return None;
+    }
+    Some(token.to_string())
 }
 
 /// JSON body extractor whose rejections use the standard error envelope.

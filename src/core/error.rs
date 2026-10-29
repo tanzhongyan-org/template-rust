@@ -3,8 +3,21 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use serde_json::json;
+use serde::Serialize;
 use thiserror::Error;
+
+/// The body of every error response: `{"error": {"message": "...", "status": 404}}`.
+#[derive(Debug, Clone, Serialize, utoipa::ToSchema)]
+pub struct ErrorEnvelope {
+    pub error: ErrorBody,
+}
+
+/// The inner error object, shared by every endpoint.
+#[derive(Debug, Clone, Serialize, utoipa::ToSchema)]
+pub struct ErrorBody {
+    pub message: String,
+    pub status: u16,
+}
 
 #[derive(Debug, Error)]
 pub enum AppError {
@@ -56,12 +69,12 @@ impl IntoResponse for AppError {
             }
         };
 
-        let body = Json(json!({
-            "error": {
-                "message": message,
-                "status": status.as_u16(),
-            }
-        }));
+        let body = Json(ErrorEnvelope {
+            error: ErrorBody {
+                message,
+                status: status.as_u16(),
+            },
+        });
 
         (status, body).into_response()
     }

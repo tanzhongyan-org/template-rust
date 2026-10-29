@@ -10,7 +10,7 @@ use tower::ServiceExt;
 /// Builds the router with a lazy pool: every request below is rejected before any query runs.
 fn app(config: AppConfig) -> axum::Router {
     let pool = sqlx::PgPool::connect_lazy(&config.database_url).unwrap();
-    app_router(AppState::new(config, pool))
+    app_router(AppState::new(config, pool, None))
 }
 
 fn trusting() -> AppConfig {

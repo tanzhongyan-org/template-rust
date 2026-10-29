@@ -12,7 +12,7 @@ use tower::ServiceExt;
 async fn test_health_check_endpoint() {
     let config = AppConfig::default();
     let pool = sqlx::PgPool::connect_lazy(&config.database_url).unwrap();
-    let state = AppState::new(config, pool);
+    let state = AppState::new(config, pool, None);
     let app = app_router(state);
 
     let response = app

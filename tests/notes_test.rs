@@ -22,7 +22,7 @@ async fn setup_app() -> axum::Router {
         .await
         .expect("Failed to run migrations");
 
-    let state = AppState::new(config, pool);
+    let state = AppState::new(config, pool, None);
     app_router(state)
 }
 

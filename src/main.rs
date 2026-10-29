@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use template_rust::api::app_router;
 use template_rust::core::config::AppConfig;
+use template_rust::core::jwt::JwtValidator;
 use template_rust::state::AppState;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -21,7 +22,8 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     let addr: SocketAddr = config.server_addr().parse()?;
-    let state = AppState::new(config.clone(), pool);
+    let jwt = JwtValidator::from_config(&config)?;
+    let state = AppState::new(config.clone(), pool, jwt);
     let app = app_router(state);
     let listener = tokio::net::TcpListener::bind(&addr).await?;
 

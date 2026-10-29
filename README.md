@@ -41,7 +41,8 @@ The second returns `[]`.
 
 - Axum 0.8 on Tokio, SQLx 0.9 with embedded migrations, one `AppError` type with a single JSON error envelope.
 - A `notes` example slice with tenant isolation by `owner_id`.
-- Fail-closed identity: no valid caller means `401`.
+- A committed OpenAPI contract with a generated TypeScript client; `make check` fails when either drifts.
+- Fail-closed identity: product JWTs against the product JWKS, or the dev header. No valid caller means `401`.
 - Request body limit, request timeout and a CORS allow-list.
 - Six verification gates behind `make check`, a fast `make verify`, and Lefthook git hooks.
 - CI with a single required check (`ci-passed`), CodeQL, secret and dependency scanning, and a weekly ZAP scan.
@@ -62,7 +63,10 @@ The second returns `[]`.
 | `APP_ENV` | No | `development` | Environment label returned by `/health`. |
 | `LOG_LEVEL` | No | `info` | Log filter. `RUST_LOG` takes precedence when set. |
 | `DATABASE_URL` | No | `postgres://postgres:password@localhost:5432/template_rust` | Postgres connection string. |
-| `TRUST_IDENTITY_HEADER` | No | `false` | When `true`, the `x-user-id` header identifies the caller. Otherwise every protected route returns `401`. |
+| `TRUST_IDENTITY_HEADER` | No | `false` | When `true`, the `x-user-id` header identifies the caller. Otherwise every protected route returns `401`. The service refuses to boot with `true` when `APP_ENV` is `production`. |
+| `PRODUCT_JWKS_URL` | No | unset | Product JWKS endpoint. When set, `Authorization: Bearer` tokens are validated and `sub` becomes the caller. |
+| `PRODUCT_JWT_ISSUER` | No | unset | Expected token issuer. Checked only when set. |
+| `PRODUCT_JWT_AUDIENCE` | No | unset | Expected token audience. Checked only when set. |
 | `POSTGRES_PORT` | No | `5432` | Host port `compose.yaml` publishes Postgres on. Change it if 5432 is taken. |
 | `AGENT_HOOK_SKIP` | No | unset | Set to `1` to skip the `make verify` agent stop hook. |
 | `CORS_ALLOWED_ORIGINS` | No | empty | Comma-separated origins allowed by CORS. Empty sends no CORS headers. |
@@ -80,6 +84,9 @@ The second returns `[]`.
 | `make check` | Every gate, as CI runs it. |
 | `make lint` / `make fix` | Check or apply formatting and clippy fixes. |
 | `make audit` | Scan dependencies for known vulnerabilities. |
+| `make licenses` | Check dependency licences and that `NOTICE` is current. |
+| `make security` | Secret scan, OSV scan and the new-dependency check. |
+| `make openapi` | Regenerate `openapi/openapi.json` and the TypeScript client. |
 | `make template-debt` | List `TEMPLATE-TODO` markers. |
 
 ## Project layout
@@ -89,6 +96,8 @@ The second returns `[]`.
 | `src/` | Library and binary. See [ARCHITECTURE.md](ARCHITECTURE.md) for the code map. |
 | `migrations/` | SQLx migrations. |
 | `tests/` | Integration tests that call the router. |
+| `openapi/` | The committed API contract. Regenerate with `make openapi`; CI fails when it drifts. |
+| `clients/` | The generated TypeScript client. Self-contained; import from `clients/ts`. |
 | `docs/` | Decisions, dependency ledger and documentation rules. See [docs/README.md](docs/README.md). |
 | `scripts/` | Policy checker and agent hook. |
 

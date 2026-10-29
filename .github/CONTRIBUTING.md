@@ -11,7 +11,8 @@
 | Docker | none | [docs.docker.com](https://docs.docker.com/get-docker/). Runs Postgres. |
 | make | none | Your package manager. |
 | cargo-deny, cargo-machete | `Makefile` | Run `make tools`. |
-| gitleaks (optional locally) | `.github/workflows/ci.yml` | [github.com/gitleaks/gitleaks](https://github.com/gitleaks/gitleaks#installing). The pre-commit hook skips the scan and prints a hint without it. |
+| gitleaks (optional locally) | The pinned shared workflow (see the `uses:` line in `.github/workflows/ci.yml`) | [github.com/gitleaks/gitleaks](https://github.com/gitleaks/gitleaks#installing). The pre-commit hook and `make security` skip the scan and print a hint without it. |
+| osv-scanner | `Makefile` (`OSV_SCANNER_VERSION`) | Downloaded automatically by `make security` into `target/bin`. |
 
 ## Set up
 
@@ -41,9 +42,10 @@ This walkthrough adds a slice named `<feature>`. Copy the shape of the notes sli
 3. Add `src/api/<feature>.rs` with handlers. Take `OwnerId` for the caller and `ApiJson` for bodies. Return `AppError` for failures.
 4. Register the module and routes in `src/api/mod.rs`.
 5. Filter every query by `owner_id`.
-6. Run `make check`.
-7. Update `ARCHITECTURE.md` (code map) and `README.md` (if configuration or commands change).
-8. Add a row to `docs/dependencies.md` for each new dependency.
+6. Annotate each handler with `#[utoipa::path]`, list it in `src/api/openapi.rs`, run `make openapi`, and extend `tests/openapi_test.rs` with the new route.
+7. Run `make check`.
+8. Update `ARCHITECTURE.md` (code map) and `README.md` (if configuration or commands change).
+9. Add a row to `docs/dependencies.md` for each new dependency.
 
 A new directory needs an ADR in `docs/decisions/` and an entry in `layout.allow` in `scripts/repo-policy.json`, in the same pull request.
 

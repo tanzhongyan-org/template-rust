@@ -6,8 +6,10 @@
       ".claude",
       ".gemini",
       ".github",
+      "clients",
       "docs",
       "migrations",
+      "openapi",
       "scripts",
       "src",
       "tests"
@@ -53,10 +55,6 @@
         {
           "file": "compose.yaml",
           "pattern": "image:\\s*postgres:(\\S+)"
-        },
-        {
-          "file": ".github/workflows/ci.yml",
-          "pattern": "image:\\s*postgres:(\\S+)"
         }
       ]
     },
@@ -66,10 +64,6 @@
         {
           "file": "Makefile",
           "pattern": "^CARGO_DENY_VERSION\\s*:=\\s*(\\S+)"
-        },
-        {
-          "file": ".github/workflows/ci.yml",
-          "pattern": "CARGO_DENY_VERSION:\\s*\"([^\"]+)\""
         }
       ]
     },
@@ -79,10 +73,23 @@
         {
           "file": "Makefile",
           "pattern": "^CARGO_MACHETE_VERSION\\s*:=\\s*(\\S+)"
-        },
+        }
+      ]
+    },
+    {
+      "name": "github-pin",
+      "sources": [
         {
           "file": ".github/workflows/ci.yml",
-          "pattern": "CARGO_MACHETE_VERSION:\\s*\"([^\"]+)\""
+          "pattern": "\\.github/\\.github/workflows/\\w+\\.yml@(\\S+)"
+        },
+        {
+          "file": ".github/workflows/codeql.yml",
+          "pattern": "\\.github/\\.github/workflows/\\w+\\.yml@(\\S+)"
+        },
+        {
+          "file": ".github/workflows/dast.yml",
+          "pattern": "\\.github/\\.github/workflows/\\w+\\.yml@(\\S+)"
         }
       ]
     }
