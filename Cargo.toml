@@ -1,13 +1,14 @@
 [package]
 name = "template-rust"
 version = "0.1.0"
+default-run = "template-rust"
 edition = "2024"
 description = "Rust web service template: Axum, SQLx, fail-closed identity, and machine-checked quality gates."
 license = "MIT"
 publish = false
 
 [dependencies]
-tokio = { version = "1.54", features = ["macros", "rt-multi-thread", "net", "signal"] }
+tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "net", "signal"] }
 axum = { version = "0.8" }
 tower-http = { version = "0.7", features = ["trace", "cors", "timeout"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -19,6 +20,9 @@ thiserror = "2"
 anyhow = "1"
 sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "macros", "chrono", "uuid", "migrate"] }
 uuid = { version = "1", features = ["v4", "serde"] }
+jsonwebtoken = { version = "11", features = ["aws_lc_rs"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
+utoipa = { version = "6", features = ["axum_extras", "chrono"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

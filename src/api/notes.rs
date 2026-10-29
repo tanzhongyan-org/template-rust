@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::{
     api::extract::{ApiJson, OwnerId},
-    core::error::AppError,
+    core::error::{AppError, ErrorEnvelope},
     state::AppState,
 };
 
@@ -21,7 +21,7 @@ macro_rules! note_columns {
     };
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, utoipa::ToSchema)]
 pub struct Note {
     pub id: String,
     pub owner_id: String,
@@ -31,13 +31,13 @@ pub struct Note {
     pub updated_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct CreateNoteRequest {
     pub title: String,
     pub body: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct UpdateNoteRequest {
     pub title: Option<String>,
     pub body: Option<String>,
@@ -67,6 +67,16 @@ fn validate_body(body: &str) -> Result<(), AppError> {
     Ok(())
 }
 
+#[utoipa::path(
+    get,
+    path = "/notes",
+    tag = "notes",
+    security(("bearer" = []), ("identity_header" = [])),
+    responses(
+        (status = 200, description = "Notes owned by the caller", body = Vec<Note>),
+        (status = 401, description = "Missing or invalid credentials", body = ErrorEnvelope),
+    )
+)]
 pub async fn list_notes(
     State(state): State<AppState>,
     OwnerId(owner_id): OwnerId,
@@ -84,6 +94,18 @@ pub async fn list_notes(
     Ok(Json(notes))
 }
 
+#[utoipa::path(
+    get,
+    path = "/notes/{id}",
+    tag = "notes",
+    params(("id" = String, Path, description = "Note identifier")),
+    security(("bearer" = []), ("identity_header" = [])),
+    responses(
+        (status = 200, description = "The note", body = Note),
+        (status = 401, description = "Missing or invalid credentials", body = ErrorEnvelope),
+        (status = 404, description = "No note with this id for the caller", body = ErrorEnvelope),
+    )
+)]
 pub async fn get_note(
     State(state): State<AppState>,
     OwnerId(owner_id): OwnerId,
@@ -103,6 +125,18 @@ pub async fn get_note(
     Ok(Json(note))
 }
 
+#[utoipa::path(
+    post,
+    path = "/notes",
+    tag = "notes",
+    request_body = CreateNoteRequest,
+    security(("bearer" = []), ("identity_header" = [])),
+    responses(
+        (status = 201, description = "The created note", body = Note),
+        (status = 400, description = "Title or body failed validation", body = ErrorEnvelope),
+        (status = 401, description = "Missing or invalid credentials", body = ErrorEnvelope),
+    )
+)]
 pub async fn create_note(
     State(state): State<AppState>,
     OwnerId(owner_id): OwnerId,
@@ -129,6 +163,20 @@ pub async fn create_note(
     Ok((StatusCode::CREATED, Json(note)))
 }
 
+#[utoipa::path(
+    put,
+    path = "/notes/{id}",
+    tag = "notes",
+    params(("id" = String, Path, description = "Note identifier")),
+    request_body = UpdateNoteRequest,
+    security(("bearer" = []), ("identity_header" = [])),
+    responses(
+        (status = 200, description = "The updated note", body = Note),
+        (status = 400, description = "Title or body failed validation", body = ErrorEnvelope),
+        (status = 401, description = "Missing or invalid credentials", body = ErrorEnvelope),
+        (status = 404, description = "No note with this id for the caller", body = ErrorEnvelope),
+    )
+)]
 pub async fn update_note(
     State(state): State<AppState>,
     OwnerId(owner_id): OwnerId,
@@ -157,6 +205,18 @@ pub async fn update_note(
     Ok(Json(note))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/notes/{id}",
+    tag = "notes",
+    params(("id" = String, Path, description = "Note identifier")),
+    security(("bearer" = []), ("identity_header" = [])),
+    responses(
+        (status = 204, description = "The note was deleted"),
+        (status = 401, description = "Missing or invalid credentials", body = ErrorEnvelope),
+        (status = 404, description = "No note with this id for the caller", body = ErrorEnvelope),
+    )
+)]
 pub async fn delete_note(
     State(state): State<AppState>,
     OwnerId(owner_id): OwnerId,

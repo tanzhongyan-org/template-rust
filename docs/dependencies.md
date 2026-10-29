@@ -17,4 +17,7 @@ request that adds the dependency. `make policy` fails when the two disagree.
 | `anyhow` | Opaque error carrier for `AppError::Internal` and `main` | Keeps internal causes out of the public error type | Nothing |
 | `sqlx` | Postgres pool, queries and embedded migrations | No database driver in the standard library | Nothing |
 | `uuid` | Note identifiers (v4) | UUID generation is not in the standard library | Nothing |
+| `jsonwebtoken` | Product JWT validation (RS256, ES256) against the product JWKS | JWT signing and verification are not in the standard library | Nothing |
+| `reqwest` | JWKS fetches over HTTPS | The standard library has no HTTP or TLS client | Nothing |
+| `utoipa` | OpenAPI document generated from handler annotations | No OpenAPI support in the standard library | Nothing |
 | `tower` | `ServiceExt::oneshot` in integration tests (dev only) | Calls the router without binding a socket | Nothing |

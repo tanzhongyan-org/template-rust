@@ -14,6 +14,8 @@ confidence-threshold = 0.9
 allow = [
     "Apache-2.0",
     "BSD-3-Clause",
+    "CDLA-Permissive-2.0", # Mozilla CA bundle in webpki-root-certs (data, not code)
+    "ISC", # rustls, aws-lc-rs and untrusted
     "MIT",
     "Unicode-3.0",
     "Zlib",

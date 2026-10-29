@@ -23,7 +23,7 @@ This is the only agent instruction file. Claude Code, Codex, Cursor, Copilot and
 
 ## 3. Security invariants
 
-- Callers are identified only through the `OwnerId` extractor; never read `x-user-id` directly [enforced by `tests/security_test.rs`].
+- Callers are identified only through the `OwnerId` extractor: a product JWT, or `x-user-id` when `TRUST_IDENTITY_HEADER=true`. Never read either directly [enforced by `tests/security_test.rs` and `tests/jwt_test.rs`].
 - Every query on `notes` filters by `owner_id` [enforced by `tests/notes_test.rs`].
 - `unwrap()` and `expect()` are forbidden outside tests [enforced by clippy].
 - `AppError::Internal` never reaches a client [review-only].
@@ -39,4 +39,4 @@ Run `make verify` after edits and `make check` before you finish:
 5. Gate 5 (Duplication): `make duplication` (jscpd, zero clones)
 6. Gate 6 (Anti-Slop): ast-grep scan and rule tests
 
-`make policy` (layout, docs, dependency ledger, version drift) runs inside both targets.
+`make policy` (layout, docs, dependency ledger, version drift) runs inside both targets. `make check` also runs `make openapi-check`, and CI additionally runs `make licenses` and `make security`.

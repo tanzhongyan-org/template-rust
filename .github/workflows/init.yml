@@ -38,7 +38,7 @@ jobs:
           NEW_NAME="${GITHUB_REPOSITORY#*/}"
           RUST_NAME=$(echo "$NEW_NAME" | tr '-' '_')
           echo "Renaming template-rust to $NEW_NAME ($RUST_NAME)..."
-          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.json" -o -name "*.jsonc" -o -name "*.yml" -o -name "*.yaml" -o -name ".env.example" \) \
+          find . -type f \( -name "*.toml" -o -name "*.rs" -o -name "*.md" -o -name "*.json" -o -name "*.jsonc" -o -name "*.yml" -o -name "*.yaml" -o -name "*.ts" -o -name ".env.example" \) \
             -not -path "*/.git/*" \
             -not -path "./.github/workflows/*" \
             -not -path "*/target/*" \

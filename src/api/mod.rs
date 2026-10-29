@@ -1,6 +1,7 @@
 pub mod extract;
 pub mod health;
 pub mod notes;
+pub mod openapi;
 
 use std::time::Duration;
 
@@ -8,7 +9,10 @@ use crate::{core::error::AppError, state::AppState};
 use axum::{
     Router,
     extract::DefaultBodyLimit,
-    http::{HeaderName, HeaderValue, Method, StatusCode, header::CONTENT_TYPE},
+    http::{
+        HeaderName, HeaderValue, Method, StatusCode,
+        header::{AUTHORIZATION, CONTENT_TYPE},
+    },
     routing::get,
 };
 use tower_http::cors::{AllowOrigin, CorsLayer};
@@ -55,5 +59,9 @@ fn cors_layer(origins: &[String]) -> CorsLayer {
     CorsLayer::new()
         .allow_origin(AllowOrigin::list(allowed))
         .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
-        .allow_headers([CONTENT_TYPE, HeaderName::from_static("x-user-id")])
+        .allow_headers([
+            CONTENT_TYPE,
+            AUTHORIZATION,
+            HeaderName::from_static("x-user-id"),
+        ])
 }
