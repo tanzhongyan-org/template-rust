@@ -76,12 +76,13 @@ The second returns `[]`.
 | Command | What it does |
 | --- | --- |
 | `make setup` | Compile once and install git hooks. |
-| `make tools` | Install `cargo-deny` and `cargo-machete` at the pinned versions. |
+| `make tools` | Install `cargo-deny`, `cargo-machete` and `cargo-llvm-cov` at the pinned versions. |
 | `make up` / `make down` | Start or stop Postgres. |
 | `make dev` | Start Postgres and run the server. |
 | `make test` | Run all tests (needs Postgres). |
+| `make coverage` | Run the tests under `cargo-llvm-cov` and fail below the line-coverage floor (needs Postgres). |
 | `make verify` | Fast checks without a database: typecheck, lint, anti-slop, policy. |
-| `make check` | Every gate, as CI runs it. |
+| `make check` | Every gate, as CI runs it (tests run under `make coverage`). |
 | `make lint` / `make fix` | Check or apply formatting and clippy fixes. |
 | `make audit` | Scan dependencies for known vulnerabilities. |
 | `make licenses` | Check dependency licences and that `NOTICE` is current. |

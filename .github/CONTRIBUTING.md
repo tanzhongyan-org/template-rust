@@ -10,7 +10,7 @@
 | Node | `.node-version` | [nodejs.org](https://nodejs.org). Runs the policy checker and pinned tools. |
 | Docker | none | [docs.docker.com](https://docs.docker.com/get-docker/). Runs Postgres. |
 | make | none | Your package manager. |
-| cargo-deny, cargo-machete | `Makefile` | Run `make tools`. |
+| cargo-deny, cargo-machete, cargo-llvm-cov | `Makefile` | Run `make tools`. |
 | gitleaks (optional locally) | The pinned shared workflow (see the `uses:` line in `.github/workflows/ci.yml`) | [github.com/gitleaks/gitleaks](https://github.com/gitleaks/gitleaks#installing). The pre-commit hook and `make security` skip the scan and print a hint without it. |
 | osv-scanner | `Makefile` (`OSV_SCANNER_VERSION`) | Downloaded automatically by `make security` into `target/bin`. |
 

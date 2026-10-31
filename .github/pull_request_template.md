@@ -19,6 +19,7 @@
 ## Checklist
 
 - [ ] Tests cover the new behavior at a public entry point.
+- [ ] Coverage: >=90% of changed lines, or a one-line justified exception.
 - [ ] Docs change in the same pull request (`README.md`, `ARCHITECTURE.md`, or `docs/`).
 - [ ] No new dependency without a row in `docs/dependencies.md`.
 - [ ] Any new top-level directory is in `layout.allow` in `scripts/repo-policy.json`.

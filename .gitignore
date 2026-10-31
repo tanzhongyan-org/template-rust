@@ -19,3 +19,6 @@ Thumbs.db
 
 # Tool caches
 node_modules/
+
+# Agent worktrees
+/.worktrees/
