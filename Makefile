@@ -2,6 +2,10 @@
 CARGO_DENY_VERSION := 0.20.2
 # renovate: datasource=crate depName=cargo-machete
 CARGO_MACHETE_VERSION := 0.9.2
+# renovate: datasource=crate depName=cargo-llvm-cov
+CARGO_LLVM_COV_VERSION := 0.8.5
+# Line-coverage floor: measured baseline minus 2 points. Ratchet up only; raise toward 80.
+COVERAGE_FLOOR := 72
 # renovate: datasource=npm depName=@ast-grep/cli
 AST_GREP_VERSION := 0.51.0
 # renovate: datasource=npm depName=jscpd
@@ -22,7 +26,7 @@ OPENAPI_TS := npx --yes --package typescript@$(TYPESCRIPT_VERSION) --package @he
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup tools up down dev test lint fix typecheck dead-code duplication \
+.PHONY: help setup tools up down dev test coverage lint fix typecheck dead-code duplication \
 	anti-slop policy audit licenses security openapi openapi-check template-debt verify check
 
 help: ## List public make targets
@@ -32,8 +36,8 @@ setup: ## Compile once and install git hooks
 	cargo check --all-targets
 	npx --yes lefthook@$(LEFTHOOK_VERSION) install
 
-tools: ## Install cargo-deny and cargo-machete at the pinned versions
-	cargo install --locked cargo-deny@$(CARGO_DENY_VERSION) cargo-machete@$(CARGO_MACHETE_VERSION)
+tools: ## Install cargo-deny, cargo-machete and cargo-llvm-cov at the pinned versions
+	cargo install --locked cargo-deny@$(CARGO_DENY_VERSION) cargo-machete@$(CARGO_MACHETE_VERSION) cargo-llvm-cov@$(CARGO_LLVM_COV_VERSION)
 
 up: ## Start Postgres and wait until it is healthy
 	docker compose up -d --wait
@@ -46,6 +50,10 @@ dev: up ## Start Postgres and run the server
 
 test: ## Run the test suite (needs Postgres)
 	cargo test
+
+coverage: ## Run the tests under cargo-llvm-cov and fail below the line-coverage floor (needs Postgres)
+	@command -v cargo-llvm-cov >/dev/null 2>&1 || cargo install --locked cargo-llvm-cov@$(CARGO_LLVM_COV_VERSION)
+	cargo llvm-cov --fail-under-lines $(COVERAGE_FLOOR) --summary-only
 
 lint: ## rustfmt, clippy, cargo-deny (bans, licenses, sources), Markdown lint
 	cargo fmt --check
@@ -101,5 +109,5 @@ template-debt: ## List TEMPLATE-TODO markers a derived repo must resolve
 verify: typecheck lint anti-slop policy ## Fast checks without a database
 	@echo "verify: ok"
 
-check: typecheck lint test dead-code duplication anti-slop policy openapi-check ## All gates, as run in CI
+check: typecheck lint coverage dead-code duplication anti-slop policy openapi-check ## All gates, as run in CI
 	@echo "check: ok"

@@ -5,5 +5,5 @@
     "MD033": { "allowed_elements": ["details", "summary"] }
   },
   "globs": ["**/*.md"],
-  "ignores": ["docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**", "target/**", "node_modules/**"]
+  "ignores": [".worktrees/**", "docs/plans/**", "docs/specs/**", "docs/archive/**", ".agents/**", "target/**", "node_modules/**"]
 }
