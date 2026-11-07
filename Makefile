@@ -3,11 +3,11 @@ CARGO_DENY_VERSION := 0.20.2
 # renovate: datasource=crate depName=cargo-machete
 CARGO_MACHETE_VERSION := 0.9.2
 # renovate: datasource=crate depName=cargo-llvm-cov
-CARGO_LLVM_COV_VERSION := 0.8.5
+CARGO_LLVM_COV_VERSION := 0.9.0
 # Line-coverage floor: measured baseline minus 2 points. Ratchet up only; raise toward 80.
 COVERAGE_FLOOR := 72
 # renovate: datasource=npm depName=@ast-grep/cli
-AST_GREP_VERSION := 0.51.0
+AST_GREP_VERSION := 0.51.1
 # renovate: datasource=npm depName=jscpd
 JSCPD_VERSION := 5.4.2
 # renovate: datasource=npm depName=lefthook
