@@ -4,8 +4,8 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
 };
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{
@@ -27,8 +27,8 @@ pub struct Note {
     pub owner_id: String,
     pub title: String,
     pub body: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: Option<DateTime<Utc>>,
+    pub created_at: OffsetDateTime,
+    pub updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Deserialize, utoipa::ToSchema)]

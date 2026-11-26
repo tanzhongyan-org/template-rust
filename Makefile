@@ -1,21 +1,21 @@
 # renovate: datasource=crate depName=cargo-deny
-CARGO_DENY_VERSION := 0.20.2
+CARGO_DENY_VERSION := 0.22.1
 # renovate: datasource=crate depName=cargo-machete
-CARGO_MACHETE_VERSION := 0.9.2
+CARGO_MACHETE_VERSION := 0.10.1
 # renovate: datasource=crate depName=cargo-llvm-cov
-CARGO_LLVM_COV_VERSION := 0.9.0
+CARGO_LLVM_COV_VERSION := 0.9.2
 # Line-coverage floor: measured baseline minus 2 points. Ratchet up only; raise toward 80.
 COVERAGE_FLOOR := 72
 # renovate: datasource=npm depName=@ast-grep/cli
-AST_GREP_VERSION := 0.51.1
+AST_GREP_VERSION := 0.51.3
 # renovate: datasource=npm depName=jscpd
-JSCPD_VERSION := 5.4.2
+JSCPD_VERSION := 5.4.3
 # renovate: datasource=npm depName=lefthook
-LEFTHOOK_VERSION := 2.2.2
+LEFTHOOK_VERSION := 2.2.3
 # renovate: datasource=npm depName=markdownlint-cli2
-MARKDOWNLINT_VERSION := 0.24.0
+MARKDOWNLINT_VERSION := 0.24.2
 # renovate: datasource=github-releases depName=google/osv-scanner extractVersion=^v(?<version>.+)$
-OSV_SCANNER_VERSION := 2.7.0
+OSV_SCANNER_VERSION := 2.7.1
 # renovate: datasource=npm depName=@hey-api/openapi-ts
 OPENAPI_TS_VERSION := 0.99.0
 # renovate: datasource=npm depName=typescript
