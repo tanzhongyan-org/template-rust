@@ -10,7 +10,7 @@ request that adds the dependency. `make policy` fails when the two disagree.
 | `tower-http` | Request tracing, CORS allow-list, request timeout | These layers are small, tested and compose with axum | `CorsLayer::permissive()` use, hand-written timeout |
 | `serde` | Derive (de)serialization for request and response types | No derive-based serialization in the standard library | Nothing |
 | `serde_json` | JSON bodies and the error envelope | JSON parsing is not in the standard library | Nothing |
-| `chrono` | `DateTime<Utc>` timestamps in rows and responses | `std::time` has no calendar or ISO 8601 formatting | Nothing |
+| `time` | `OffsetDateTime` timestamps in rows and responses | `std::time` has no calendar or ISO 8601 formatting | `chrono` (unmaintained per RUSTSEC-2026-0543) |
 | `tracing` | Structured log events | `println!` has no levels, fields or spans | Nothing |
 | `tracing-subscriber` | Log filtering (`LOG_LEVEL`) and formatting | `tracing` needs a subscriber to emit anything | Nothing |
 | `thiserror` | Derive for `AppError` | Removes boilerplate `Display` and `From` impls | Nothing |
